@@ -9,6 +9,9 @@ public class CatMovement : MonoBehaviour
     private Animator animator; // referencing animator for playing animations
     private CharacterController controller; // Character Controller for movement
 
+    private bool isNearItem = false;
+    private GameObject currentItem; // For pickup of items
+
 
     // Start is called before the first frame update
     void Start()
@@ -43,5 +46,37 @@ public class CatMovement : MonoBehaviour
 
             //Trigger the walking animation
             if (animator != null) animator.SetBool("isWalking", moveDir.sqrMagnitude > 0.0001f);
+
+            if (isNearItem && Input.GetKeyDown(KeyCode.E))
+            {
+                if (animator != null)
+                animator.SetTrigger("PickUp");
+
+                if (currentItem != null)
+                {
+                    Destroy(currentItem);
+                    Debug.Log("Item Collected");
+                }
+
+                isNearItem = false;
+            }
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Collectible"))
+        {
+            isNearItem = true;
+            currentItem = other.gameObject;
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Collectible"))
+        {
+            isNearItem = false;
+            currentItem = null;
+        }
     }
 }
