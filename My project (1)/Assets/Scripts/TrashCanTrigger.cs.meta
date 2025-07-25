@@ -1,2 +1,14 @@
 fileFormatVersion: 2
 guid: 371d6c50ed80c9c4290ee02a15d1dd11
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - fish2: {fileID: 919132149155446097, guid: aa1b34e94669f9c459df28ce8580f547, type: 3}
+  - lid: {instanceID: 0}
+  - PopOutPosition: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
