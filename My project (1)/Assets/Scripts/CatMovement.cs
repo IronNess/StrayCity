@@ -50,7 +50,7 @@ public class CatMovement : MonoBehaviour
             if (isNearItem && Input.GetKeyDown(KeyCode.E))
             {
                 if (animator != null)
-                animator.SetTrigger("PickUp");
+                animator.SetTrigger("CollectItem");
 
                 if (currentItem != null)
                 {
