@@ -8,8 +8,9 @@ public class TrashCanTrigger : MonoBehaviour
     public float lidOpenAngle = -120f;
     public float lidOpenSpeed = 5f;
     public float lidCloseDelay = 2f;
+    public Transform popOutPosition;         
 
-    private bool hasPopped = false;
+    private bool hasPopped  = false;
     private bool playerNear = false;
     private Quaternion originalLidRotation;
 
@@ -21,12 +22,31 @@ public class TrashCanTrigger : MonoBehaviour
 
     void Update()
     {
+        if (playerNear)
+            Debug.Log("Player is near trash can");
+
         if (playerNear && !hasPopped && Input.GetKeyDown(KeyCode.E))
         {
+            Debug.Log("Pressed E - activating trash can");
             hasPopped = true;
 
-            if (fish2 != null)
+           
+            if (fish2 != null && popOutPosition != null)
+            {
+                Debug.Log("Popping fish out!");
+                Debug.Log("FISH BLOCK EXECUTED");
+                fish2.transform.position = popOutPosition.position;
                 fish2.SetActive(true);
+
+              Rigidbody rb = fish2.GetComponent<Rigidbody>();
+               if (rb != null)
+               {
+                   rb.velocity = Vector3.zero;
+                   rb.AddForce(popOutPosition.up * 3f + popOutPosition.forward * 2f,
+                               ForceMode.Impulse);
+               }
+            }
+        
 
             if (lid != null)
                 StartCoroutine(OpenAndCloseLid());
@@ -34,43 +54,33 @@ public class TrashCanTrigger : MonoBehaviour
     }
 
     void OnTriggerEnter(Collider other)
-{
-    if (other.CompareTag("Player"))
-    {
-        Debug.Log("Trigger works!");
-       
-        playerNear = true;
-    }
-}
-
-    void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            playerNear = false;
+            Debug.Log("Trigger works!");
+            playerNear = true;
         }
     }
 
     private IEnumerator OpenAndCloseLid()
     {
-        Quaternion openRotation = Quaternion.Euler(0, 0, lidOpenAngle);
-        float t = 0;
+        Debug.Log("Opening lid…");
+        Quaternion openRot = Quaternion.Euler(0, 0, lidOpenAngle);
 
-        while (t < 1f)
+        for (float t = 0; t < 1f; t += Time.deltaTime * lidOpenSpeed)
         {
-            t += Time.deltaTime * lidOpenSpeed;
-            lid.localRotation = Quaternion.Slerp(originalLidRotation, openRotation, t);
+            lid.localRotation = Quaternion.Slerp(originalLidRotation, openRot, t);
             yield return null;
         }
 
+        Debug.Log("Lid opened. Waiting…");
         yield return new WaitForSeconds(lidCloseDelay);
 
-        t = 0;
-        while (t < 1f)
+        for (float t = 0; t < 1f; t += Time.deltaTime * lidOpenSpeed)
         {
-            t += Time.deltaTime * lidOpenSpeed;
-            lid.localRotation = Quaternion.Slerp(openRotation, originalLidRotation, t);
+            lid.localRotation = Quaternion.Slerp(openRot, originalLidRotation, t);
             yield return null;
         }
+        Debug.Log("Lid closed.");
     }
 }
