@@ -38,12 +38,7 @@ public class TrashCanTrigger : MonoBehaviour
     if (other.CompareTag("Player"))
     {
         Debug.Log("Trigger works!");
-        if (!hasPopped)
-        {
-            hasPopped = true;
-            if (fish2) fish2.SetActive(true);
-            if (lid) StartCoroutine(OpenAndCloseLid());
-        }
+       
         playerNear = true;
     }
 }
