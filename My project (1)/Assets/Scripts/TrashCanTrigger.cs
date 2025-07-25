@@ -34,12 +34,19 @@ public class TrashCanTrigger : MonoBehaviour
     }
 
     void OnTriggerEnter(Collider other)
+{
+    if (other.CompareTag("Player"))
     {
-        if (other.CompareTag("Player"))
+        Debug.Log("Trigger works!");
+        if (!hasPopped)
         {
-            playerNear = true;
+            hasPopped = true;
+            if (fish2) fish2.SetActive(true);
+            if (lid) StartCoroutine(OpenAndCloseLid());
         }
+        playerNear = true;
     }
+}
 
     void OnTriggerExit(Collider other)
     {
