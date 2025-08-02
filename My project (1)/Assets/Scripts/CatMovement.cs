@@ -50,6 +50,7 @@ public class CatMovement : MonoBehaviour
 
             if (currentItem != null)
             {
+                GameManager.Instance.CollectFish();
                 Destroy(currentItem);
                 Debug.Log("Item Collected");
             }
@@ -65,6 +66,7 @@ public class CatMovement : MonoBehaviour
 
             if (currentEnemy != null)
             {
+                GameManager.Instance.CatchRat();
                 Destroy(currentEnemy);
                 Debug.Log("Enemy defeated!");
             }
@@ -92,17 +94,18 @@ public class CatMovement : MonoBehaviour
     {
         if (other.CompareTag("Collectible"))
         {
-            isNearItem = true;
-            currentItem = other.gameObject;
+            isNearItem = false;
+            currentItem = null;
         }
-
         else if (other.CompareTag("Enemy"))
         {
-           if (animator != null)
-           animator.SetTrigger("CollectItem");
-
-           Destroy(other.gameObject);
-           Debug.Log("Rat Caught");
+            nearEnemy = false;
+            currentEnemy = null;
         }
+    }
+
+    void OnDeath()
+    {
+        GameManager.Instance.GameOver();
     }
 }
