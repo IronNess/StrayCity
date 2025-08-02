@@ -5,19 +5,17 @@ using UnityEngine.AI;
 [RequireComponent(typeof(NavMeshAgent))]
 public class RatWander : MonoBehaviour
 {
-    public float wanderRadius = 10f;       // How far from the start point the rat can wander
+    public float wanderRadius = 100f;       // How far from the start point the rat can wander
     public float wanderInterval = 2f;      // How often to choose a new point
-    public float speed = 3.5f;             // NavMesh agent movement speed
+    public float speed = 4.5f;             // NavMesh agent movement speed
 
     private NavMeshAgent agent;
-    private Vector3 homePosition;
     private float timer;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         agent.speed = speed;
-        homePosition = transform.position;
         PickNewDestination();
     }
 
@@ -35,22 +33,33 @@ public class RatWander : MonoBehaviour
     void PickNewDestination()
     {
         timer = 0f;
+        Vector3 newPos = RandomNavmeshLocation(wanderRadius);
 
-        for (int i = 0; i < 10; i++) // Try up to 10 times to find a valid point
+        if (newPos != Vector3.zero)
         {
-            Vector3 randomDir = Random.insideUnitSphere * wanderRadius;
-            randomDir.y = 0f;
-            Vector3 potentialPos = homePosition + randomDir;
+            agent.SetDestination(newPos);
+        }
+        else
+        {
+            agent.ResetPath();
+        }
+    }
+     
+     Vector3 RandomNavmeshLocation(float radius)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            Vector3 randomDirection = Random.insideUnitSphere * radius;
+            randomDirection.y = 0;
+            randomDirection += transform.position;
 
             NavMeshHit hit;
-            if (NavMesh.SamplePosition(potentialPos, out hit, 2f, NavMesh.AllAreas))
+            if (NavMesh.SamplePosition(randomDirection, out hit, 10f, NavMesh.AllAreas))
             {
-                agent.SetDestination(hit.position);
-                return; // Found a valid point, exit early
+                return hit.position;
             }
         }
 
-        // If no point was valid after 10 tries, reset path
-        agent.ResetPath();
+              return Vector3.zero;
     }
 }
