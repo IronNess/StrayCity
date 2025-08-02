@@ -48,7 +48,7 @@ public class TrashCanTrigger : MonoBehaviour
                 if (rb != null)
                 {
                     rb.velocity = Vector3.zero;
-                    rb.AddForce(popOutPosition.up * 8f + popOutPosition.forward * 5f, ForceMode.Impulse);
+                    rb.AddForce(popOutPosition.up * 3f + popOutPosition.forward * 2f, ForceMode.Impulse);
                 }
             }
 
