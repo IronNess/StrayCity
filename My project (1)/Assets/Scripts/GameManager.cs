@@ -10,6 +10,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
+    public GameObject rat2;
+
     [Header("Panels")]
     public GameObject startPanel;
     public GameObject gamePanel;
@@ -84,13 +86,15 @@ public class GameManager : MonoBehaviour
     fishIcons[fishCollected].SetActive(false);
     fishCollected++;
 
-    CheckEndGameCondition();
-}
-    
-    public void CatchRat()
-    { 
-        ratIcon.SetActive(false);
-        ratCaught = true;
+    if (fishCollected == totalFish && !ratCaught)
+    {
+        if (rat2 !=null)
+        {
+        Debug.Log("Rat Spawned!");
+        ratIcon.SetActive(true);
+        rat2.SetActive(true);
+        }
+    }
         CheckEndGameCondition();
 }
 
@@ -107,6 +111,18 @@ private void CheckEndGameCondition()
         GameOver();
     }
 }
+
+public void CatchRat()
+{
+    ratCaught = true;
+
+    if (ratIcon != null)
+
+ratIcon.SetActive(false);
+
+CheckEndGameCondition();
+}
+
 }
 
 
