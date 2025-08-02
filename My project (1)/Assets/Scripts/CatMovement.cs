@@ -1,111 +1,95 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class CatMovement : MonoBehaviour
 {
-    public float moveSpeed = 40f;
-    public float rotationSpeed = 200f;
+    // ─── Movement ────────────────────────────────────────────────────────────
+    [Header("Movement")]
+    [SerializeField, Range(1, 100)]  private float moveSpeed     = 40f;
+    [SerializeField, Range(30, 360)] private float rotationSpeed = 200f;
+    public float MoveSpeed     => moveSpeed;
+    public float RotationSpeed => rotationSpeed;
 
-    private Animator animator;
+    // ─── Input ───────────────────────────────────────────────────────────────
+    [Header("Input")]
+    [SerializeField] private KeyCode interactKey = KeyCode.E;
+    [SerializeField] private KeyCode attackKey   = KeyCode.F;
+
+    // ─── Components ──────────────────────────────────────────────────────────
     private CharacterController controller;
+    private Animator            animator;
 
-    private bool isNearItem = false;
-    private GameObject currentItem;
+    // ─── State ───────────────────────────────────────────────────────────────
+    private IInteractable currentInteractable;
+    private Enemy         currentEnemy;
 
-    private bool nearEnemy = false;
-    private GameObject currentEnemy;
-
-    void Start()
+    private void Awake()
     {
-        animator = GetComponent<Animator>();
         controller = GetComponent<CharacterController>();
-
-        if (animator != null)
-            animator.applyRootMotion = false;
+        animator   = GetComponent<Animator>();
+        if (animator) animator.applyRootMotion = false;
     }
 
-    void Update()
+    private void Update()
     {
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        HandleMovement();
+        HandleInteraction();
+        HandleAttack();
+    }
 
-        Vector3 moveDir = (transform.right * h + transform.forward * v).normalized;
-        controller.Move(moveDir * moveSpeed * Time.deltaTime);
+    private void HandleMovement()
+    {
+        Vector3 dir = (transform.right * Input.GetAxisRaw("Horizontal") +
+                       transform.forward* Input.GetAxisRaw("Vertical")).normalized;
 
-        if (moveDir.sqrMagnitude > 0.0001f)
+        controller.Move(dir * moveSpeed * Time.deltaTime);
+
+        if (dir.sqrMagnitude > 0.001f)
         {
-            Quaternion targetRot = Quaternion.LookRotation(moveDir, Vector3.up);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, targetRot, rotationSpeed * Time.deltaTime);
+            Quaternion look = Quaternion.LookRotation(dir, Vector3.up);
+            transform.rotation = Quaternion.RotateTowards(transform.rotation,
+                                                          look,
+                                                          rotationSpeed * Time.deltaTime);
         }
+        animator?.SetBool("isWalking", dir.sqrMagnitude > 0.001f);
+    }
 
-        if (animator != null)
-            animator.SetBool("isWalking", moveDir.sqrMagnitude > 0.0001f);
-
-        // E to collect fish
-        if (isNearItem && Input.GetKeyDown(KeyCode.E))
+    private void HandleInteraction()
+    {
+        if (currentInteractable == null) return;
+        if (Input.GetKeyDown(interactKey))
         {
-            if (animator != null)
-                animator.SetTrigger("CollectItem");
-
-            if (currentItem != null)
-            {
-                GameManager.Instance.CollectFish();
-                Destroy(currentItem);
-                Debug.Log("Item Collected");
-            }
-
-            isNearItem = false;
-        }
-
-        // F to attack enemy (rat)
-        if (nearEnemy && Input.GetKeyDown(KeyCode.F))
-        {
-            if (animator != null)
-                animator.SetTrigger("CollectItem"); // reuse animation
-
-            if (currentEnemy != null)
-            {
-                GameManager.Instance.CatchRat();
-                Destroy(currentEnemy);
-                Debug.Log("Enemy defeated!");
-            }
-
-            nearEnemy = false;
+            animator?.SetTrigger("CollectItem");
+            currentInteractable.Interact(this);
         }
     }
 
-    void OnTriggerEnter(Collider other)
+    private void HandleAttack()
     {
-        if (other.CompareTag("Collectible"))
+        if (currentEnemy == null) return;
+        if (Input.GetKeyDown(attackKey))
         {
-            isNearItem = true;
-            currentItem = other.gameObject;
-        }
-
-        if (other.CompareTag("Enemy"))
-        {
-            nearEnemy = true;
-            currentEnemy = other.gameObject;
-        }
-    }
-
-    void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Collectible"))
-        {
-            isNearItem = false;
-            currentItem = null;
-        }
-        else if (other.CompareTag("Enemy"))
-        {
-            nearEnemy = false;
+            animator?.SetTrigger("CollectItem");
+            currentEnemy.Defeat();
             currentEnemy = null;
         }
     }
 
-    void OnDeath()
+    // ─── Trigger detection ───────────────────────────────────────────────────
+    private void OnTriggerEnter(Collider other)
     {
-        GameManager.Instance.GameOver();
+        if (other.TryGetComponent(out IInteractable i)) currentInteractable = i;
+        if (other.TryGetComponent(out Enemy         e)) currentEnemy       = e;
     }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.TryGetComponent(out IInteractable i) && ReferenceEquals(i, currentInteractable))
+            currentInteractable = null;
+        if (other.TryGetComponent(out Enemy e) && ReferenceEquals(e, currentEnemy))
+            currentEnemy = null;
+    }
+
+    // Optional death hook
+    private void OnDeath() => GameManager.Instance.GameOver();
 }
