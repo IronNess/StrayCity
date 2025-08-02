@@ -5,7 +5,7 @@ public class TrashCanTrigger : MonoBehaviour
 {
     public GameObject fish2;
     public Transform lid;
-    public Transform[] flaps; // Assign flap1, flap2, flap3, flap4
+    public Transform[] flaps; // Optional: Assign flap1, flap2, flap3, flap4
     public float lidOpenAngle = -120f;
     public float lidOpenSpeed = 5f;
     public float lidCloseDelay = 2f;
@@ -34,28 +34,30 @@ public class TrashCanTrigger : MonoBehaviour
     {
         if (playerNear && !hasPopped && Input.GetKeyDown(KeyCode.E))
         {
+            Debug.Log("E pressed near: " + gameObject.name);
             hasPopped = true;
 
+            // Pop fish
             if (fish2 != null && popOutPosition != null)
             {
-                fish2.transform.position = popOutPosition.position;
+                fish2.transform.position = popOutPosition.position + Vector3.up * 0.2f;
                 fish2.SetActive(true);
+                fish2.tag = "Collectible";
 
                 Rigidbody rb = fish2.GetComponent<Rigidbody>();
                 if (rb != null)
                 {
                     rb.velocity = Vector3.zero;
-                    rb.AddForce(popOutPosition.up * 3f + popOutPosition.forward * 2f, ForceMode.Impulse);
+                    rb.AddForce(popOutPosition.up * 8f + popOutPosition.forward * 5f, ForceMode.Impulse);
                 }
             }
 
+            // Open lid or flaps
             if (lid != null)
                 StartCoroutine(OpenAndCloseLid());
-            else if (flaps != null && flaps.Length > 0);
+            else if (flaps != null && flaps.Length > 0)
                 StartCoroutine(OpenAndCloseFlaps());
         }
-
-        
     }
 
     void OnTriggerEnter(Collider other)
@@ -107,13 +109,11 @@ public class TrashCanTrigger : MonoBehaviour
 
             switch (i)
             {
-
-              case 0: axisRotation = new Vector3(flapOpenAngle, 0, 0); break;     // Flap1 → X+
-              case 1: axisRotation = new Vector3(0, 0, -flapOpenAngle); break;    // Flap2 → Z-
-              case 2: axisRotation = new Vector3(0, 0, flapOpenAngle); break;     // Flap3 → Z+
-              case 3: axisRotation = new Vector3(-flapOpenAngle, 0, 0); break;    // Flap4 → X-
+                case 0: axisRotation = new Vector3(flapOpenAngle, 0, 0); break;      // Flap1 → X+
+                case 1: axisRotation = new Vector3(0, 0, -flapOpenAngle); break;     // Flap2 → Z-
+                case 2: axisRotation = new Vector3(0, 0, flapOpenAngle); break;      // Flap3 → Z+
+                case 3: axisRotation = new Vector3(-flapOpenAngle, 0, 0); break;     // Flap4 → X-
             }
-
 
             openRotations[i] = flaps[i].localRotation * Quaternion.Euler(axisRotation);
         }
