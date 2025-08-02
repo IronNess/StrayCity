@@ -1,65 +1,50 @@
-using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
 [RequireComponent(typeof(NavMeshAgent))]
-public class RatWander : MonoBehaviour
+public class RatWander : Enemy
 {
-    public float wanderRadius = 100f;       // How far from the start point the rat can wander
-    public float wanderInterval = 2f;      // How often to choose a new point
-    public float speed = 4.5f;             // NavMesh agent movement speed
+    [Header("Wander")]
+    [SerializeField, Min(1)] private float radius   = 100f;
+    [SerializeField, Min(0.1f)] private float interval = 2f;
+    [SerializeField, Min(0.1f)] private float speed  = 4.5f;
 
     private NavMeshAgent agent;
     private float timer;
 
-    void Start()
+    private void Awake()
     {
         agent = GetComponent<NavMeshAgent>();
         agent.speed = speed;
-        PickNewDestination();
     }
 
-    void Update()
+    private void OnEnable() => PickDestination();
+
+    private void Update()
     {
         timer += Time.deltaTime;
-
         if (!agent.pathPending &&
-            (agent.remainingDistance <= agent.stoppingDistance || timer >= wanderInterval))
-        {
-            PickNewDestination();
-        }
+            (agent.remainingDistance <= agent.stoppingDistance || timer >= interval))
+            PickDestination();
     }
 
-    void PickNewDestination()
+    private void PickDestination()
     {
-        timer = 0f;
-        Vector3 newPos = RandomNavmeshLocation(wanderRadius);
-
-        if (newPos != Vector3.zero)
-        {
-            agent.SetDestination(newPos);
-        }
-        else
-        {
-            agent.ResetPath();
-        }
+        timer = 0;
+        Vector3 pos = RandomNavLocation(radius);
+        if (pos != Vector3.zero) agent.SetDestination(pos);
+        else agent.ResetPath();
     }
-     
-     Vector3 RandomNavmeshLocation(float radius)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            Vector3 randomDirection = Random.insideUnitSphere * radius;
-            randomDirection.y = 0;
-            randomDirection += transform.position;
 
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(randomDirection, out hit, 10f, NavMesh.AllAreas))
-            {
+    private static Vector3 RandomNavLocation(float r, int tries = 10)
+    {
+        for (int i = 0; i < tries; i++)
+        {
+            Vector3 random = Random.insideUnitSphere * r;
+            random.y = 0;
+            if (NavMesh.SamplePosition(random, out var hit, 10f, NavMesh.AllAreas))
                 return hit.position;
-            }
         }
-
-              return Vector3.zero;
+        return Vector3.zero;
     }
 }
