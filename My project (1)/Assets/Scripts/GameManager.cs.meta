@@ -1,2 +1,18 @@
 fileFormatVersion: 2
 guid: ba4196febf0eb924cae07f4758571ad4
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - rat2: {fileID: 919132149155446097, guid: 62c26052203d12f4487c813f3279afaf, type: 3}
+  - startPanel: {instanceID: 0}
+  - gamePanel: {instanceID: 0}
+  - pausePanel: {instanceID: 0}
+  - gameOverPanel: {instanceID: 0}
+  - ratIcon: {instanceID: 0}
+  - tutorial: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
