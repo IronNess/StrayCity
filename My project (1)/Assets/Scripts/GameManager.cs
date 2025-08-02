@@ -1,52 +1,49 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public enum GameState { Start, Playing, Paused, GameOver }
 
 public class GameManager : MonoBehaviour
-
 {
-    public static GameManager Instance;
+    public static GameManager Instance { get; private set; }
 
-    public GameObject rat2;
+    // ─── Gameplay ───────────────────────────────────────────────────────────
+    [Header("Gameplay")]
+    [SerializeField, Min(1)] private int totalFish = 3;
+    [SerializeField]        private GameObject ratPrefab;   // disabled in scene
 
+    // ─── UI ─────────────────────────────────────────────────────────────────
     [Header("Panels")]
-    public GameObject startPanel;
-    public GameObject gamePanel;
-    public GameObject pausePanel;
-    public GameObject gameOverPanel;
+    [SerializeField] private GameObject startPanel;
+    [SerializeField] private GameObject gamePanel;
+    [SerializeField] private GameObject pausePanel;
+    [SerializeField] private GameObject gameOverPanel;
 
-    [Header("HUD Icons")]
-    public GameObject[] fishIcons;
-    public GameObject ratIcon;
-
-    private int fishCollected = 0;
-    private bool ratCaught = false;
-
-    [Header("Game Completion Settings")]
-    public int totalFish = 3;
+    [Header("HUD")]
+    [SerializeField] private GameObject[] fishIcons;
+    [SerializeField] private GameObject   ratIcon;
 
     [Header("Tutorial")]
-    public GameObject tutorial;
+    [SerializeField] private GameObject tutorialCanvas;
 
-    public GameState CurrentState { get; private set; }
+    // ─── State ──────────────────────────────────────────────────────────────
+    private int  fishCollected;
+    private bool ratCaught;
+    public  GameState CurrentState { get; private set; }
 
-    void Awake()
+    private void Awake()
     {
         if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        else { Destroy(gameObject); return; }
     }
 
-    void Start() 
+    private void Start()
     {
-        if (tutorial != null) tutorial.SetActive(false);
+        tutorialCanvas?.SetActive(false);
         ChangeState(GameState.Start);
-        
     }
 
-    void Update()
+    private void Update()
     {
         if (CurrentState == GameState.Playing && Input.GetKeyDown(KeyCode.Escape))
             ChangeState(GameState.Paused);
@@ -54,75 +51,64 @@ public class GameManager : MonoBehaviour
             ChangeState(GameState.Playing);
     }
 
+    // ─── Public API ─────────────────────────────────────────────────────────
     public void ChangeState(GameState newState)
     {
         CurrentState = newState;
 
         startPanel.SetActive(newState == GameState.Start);
-        gamePanel.SetActive(newState == GameState.Playing);
+        gamePanel .SetActive(newState == GameState.Playing);
         pausePanel.SetActive(newState == GameState.Paused);
         gameOverPanel.SetActive(newState == GameState.GameOver);
 
-        Time.timeScale = (newState == GameState.Paused || newState == GameState.GameOver) ? 0f : 1f;
+        Time.timeScale = (newState == GameState.Paused || newState == GameState.GameOver) ? 0 : 1;
     }
 
     public void StartGame()
     {
-     ChangeState(GameState.Playing);
-     if (tutorial != null)
-     tutorial.SetActive(true);
+        ChangeState(GameState.Playing);
+        tutorialCanvas?.SetActive(true);
     }
-
 
     public void ResumeGame() => ChangeState(GameState.Playing);
-    public void Restart()    => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-    public void Quit()       => Application.Quit();
-    public void GameOver()   => ChangeState(GameState.GameOver);
+    public void Restart   () => SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    public void Quit      () => Application.Quit();
+    public void GameOver  () => ChangeState(GameState.GameOver);
 
-  public void CollectFish()
-{
-    if (fishCollected >= fishIcons.Length) return;
-
-    fishIcons[fishCollected].SetActive(false);
-    fishCollected++;
-
-    if (fishCollected == totalFish && !ratCaught)
+    public void CollectFish()
     {
-        if (rat2 !=null)
-        {
-        Debug.Log("Rat Spawned!");
-        ratIcon.SetActive(true);
-        rat2.SetActive(true);
-        }
+        if (fishCollected >= fishIcons.Length) return;
+
+        fishIcons[fishCollected].SetActive(false);  // hide icon
+        fishCollected++;
+
+        if (fishCollected == totalFish && !ratCaught)
+            SpawnRat();
+
+        CheckEndCondition();
     }
-        CheckEndGameCondition();
-}
 
-public void CloseTutorial()
-{
-    tutorial.SetActive(false);
-}
-
-
-private void CheckEndGameCondition()
-{
-    if (fishCollected == totalFish && ratCaught)
+    public void CatchRat()
     {
-        GameOver();
+        ratCaught = true;
+        ratIcon?.SetActive(false);
+        CheckEndCondition();
+    }
+
+    public void CloseTutorial() => tutorialCanvas?.SetActive(false);
+
+    // ─── Internals ──────────────────────────────────────────────────────────
+    private void SpawnRat()
+    {
+        if (!ratPrefab) return;
+
+        ratPrefab.SetActive(true);
+        ratIcon?.SetActive(true);
+    }
+
+    private void CheckEndCondition()
+    {
+        if (fishCollected >= totalFish && ratCaught)
+            GameOver();
     }
 }
-
-public void CatchRat()
-{
-    ratCaught = true;
-
-    if (ratIcon != null)
-
-ratIcon.SetActive(false);
-
-CheckEndGameCondition();
-}
-
-}
-
-
